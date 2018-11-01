@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "840398367589",
+    "firebase_url": "https://jobquals.firebaseio.com",
+    "project_id": "jobquals",
+    "storage_bucket": "jobquals.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:840398367589:android:fcbad5deae101123",
+        "android_client_info": {
+          "package_name": "edu.gvsu.cis.jobquals"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "840398367589-bpek6s6oaqlpf02tu5tgsk012mrkc0vl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "cis.gvsu.edu",
+            "certificate_hash": "7337769c4f2b9d9418e6732a77f50926d41fbd1c"
+          }
+        },
+        {
+          "client_id": "840398367589-6qerkj05utc2bh11seldikn1emv3n0ot.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDL7QVsSqwU1RC61iuCBYCmWZ2RAEUwVU0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "840398367589-6qerkj05utc2bh11seldikn1emv3n0ot.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
