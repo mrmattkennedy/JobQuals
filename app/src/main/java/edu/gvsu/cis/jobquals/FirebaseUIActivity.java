@@ -153,9 +153,9 @@ public class FirebaseUIActivity extends AppCompatActivity {
         if (user == null)
             setResult(Activity.RESULT_CANCELED, i);
         else {
-            i.putExtra("UserId", user.getUid());
-            i.putExtra("UserEmail", user.getEmail());
-            i.putExtra("UserPic", (Parcelable) user.getPhotoUrl());
+//            i.putExtra("UserId", user.getUid());
+//            i.putExtra("UserEmail", user.getEmail());
+//            i.putExtra("UserPic", (Parcelable) user.getPhotoUrl());
             setResult(Activity.RESULT_OK, i);
         }
         finish();
