@@ -21,21 +21,24 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
 
 public class SearchRecyclerActivity extends AppCompatActivity implements SearchRecyclerAdapter.ItemClickListener {
 
     SearchRecyclerAdapter adapter;
     private Button selectBtn;
-    private Button clearSearchesBtn;
+//    private Button clearSearchesBtn;
     private Button cancelBtn;
     private FirebaseDatabase mDatabase;
-    private FirebaseAuth mAuth;
+//    private FirebaseAuth mAuth;
     private DatabaseReference mRef;
-    private DatabaseReference userRefDb;
-    private FirebaseUser user;
-    private String userID;
+//    private FirebaseUser user;
+//    private String userID;
     private ArrayList<String> recentSearches;
     private String selected = null;
+    int max = 25;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,24 +46,34 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
         setContentView(R.layout.activity_searches);
 
         selectBtn = findViewById(R.id.selectBtn);
-        clearSearchesBtn = findViewById(R.id.clearSearchesBtn);
+//        clearSearchesBtn = findViewById(R.id.clearSearchesBtn);
         cancelBtn = findViewById(R.id.cancelBtn);
-        mAuth = FirebaseAuth.getInstance();
+//        mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
         mRef = mDatabase.getReference();
-        user = mAuth.getCurrentUser();
-        userID = user.getUid();
-        userRefDb = mRef.child(userID);
+//        user = mAuth.getCurrentUser();
+//        userID = user.getUid();
         recentSearches = new ArrayList<>();
 
         mRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot dataSnapshot) {
                 recentSearches.clear();
-                for (DataSnapshot childSnapshot: dataSnapshot.child("users").child(userID).getChildren()) {
-                    String temp = childSnapshot.getValue(String.class);
-                    recentSearches.add(temp);
-                    setUpRecyclerView();
+                int currentVal = 0;
+                Iterable<DataSnapshot> iter = dataSnapshot.child("users").getChildren();
+                List<DataSnapshot> list = new ArrayList<DataSnapshot>();
+                for (DataSnapshot item : iter) {
+                    list.add(item);
+                }
+                Collections.reverse(list);
+                for (DataSnapshot childSnapshot : list) {
+                    if (++currentVal <= max) {
+                        String temp = childSnapshot.getValue(String.class);
+                        recentSearches.add(temp);
+                        setUpRecyclerView();
+                    } else {
+                        childSnapshot.getRef().removeValue();
+                    }
                 }
             }
 
@@ -71,7 +84,7 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
         });
 
         selectBtn.setOnClickListener(v -> select());
-        clearSearchesBtn.setOnClickListener(v -> clearSearches());
+//        clearSearchesBtn.setOnClickListener(v -> clearSearches());
         cancelBtn.setOnClickListener(v -> cancel());
     }
 
@@ -88,11 +101,11 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
         recyclerView.addItemDecoration(dividerItemDecoration);
     }
 
-    private void clearSearches() {
-        mRef.child("users").child(userID).removeValue();
-        recentSearches.clear();
-        setUpRecyclerView();
-    }
+//    private void clearSearches() {
+//        mRef.child("users").removeValue();
+//        recentSearches.clear();
+//        setUpRecyclerView();
+//    }
 
     private void cancel() {
         Intent i = new Intent(SearchRecyclerActivity.this, MainActivity.class);

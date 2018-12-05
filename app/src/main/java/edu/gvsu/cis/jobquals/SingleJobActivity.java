@@ -4,13 +4,15 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.TextView;
 
 public class SingleJobActivity extends AppCompatActivity {
 
     private Button doneBtn;
-    private TextView jobView;
+    private WebView webView;
     @Override
     //only called once
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,12 +20,19 @@ public class SingleJobActivity extends AppCompatActivity {
         setContentView(R.layout.activity_single_job);
 
         doneBtn = findViewById(R.id.doneBtn);
-        jobView = findViewById(R.id.singleJobText);
+        webView = findViewById(R.id.webView);
 
         doneBtn.setOnClickListener(v -> finish());
-        jobView.setMovementMethod(new ScrollingMovementMethod());
 
-        String jobData = getIntent().getStringExtra("Data");
-        jobView.setText(Html.fromHtml(jobData));
+        String url = getIntent().getStringExtra("URL");
+        webView.setWebViewClient(new WebViewClient() {
+            @Override
+            public boolean shouldOverrideUrlLoading(WebView view, String url) {
+                view.loadUrl(url);
+                return false;
+            }
+        });
+        webView.getSettings().setJavaScriptEnabled(true);
+        webView.loadUrl(url);
     }
 }
