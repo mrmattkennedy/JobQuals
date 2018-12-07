@@ -34,6 +34,7 @@ public class MainActivity extends AppCompatActivity {
 //    private FirebaseUser currentUser;
     private String data;
 //    private final int FIREBASE_REQUEST_CODE = 2;
+    private Button qualsBtn;
     private final int SEARCHES_REQUEST_CODE = 3;
 
     @Override
@@ -49,12 +50,14 @@ public class MainActivity extends AppCompatActivity {
         locationInput = findViewById(R.id.jobInput2);
         avoidInput = findViewById(R.id.jobInput3);
         searchBtn = findViewById(R.id.searchbtn);
+        qualsBtn = findViewById(R.id.qualsBtn);
 //        userBtn = findViewById(R.id.userBtn);
 //        signOutBtn = findViewById(R.id.signOutBtn);
         requiredRadio = findViewById(R.id.requiredRadio);
         avoidRadio = findViewById(R.id.avoidRadio);
 
         searchBtn.setOnClickListener(v -> jobSearch());
+        qualsBtn.setOnClickListener(v -> displayQualifications());
 //        signOutBtn.setOnClickListener(v -> signOut());
 //        userBtn.setOnClickListener(v -> changeUser());
 
@@ -121,6 +124,7 @@ public class MainActivity extends AppCompatActivity {
             boolean required = requiredRadio.isChecked();
             i.putExtra("URL", url);
             i.putExtra("Required", required);
+            i.putExtra("Location", locationToAdd);
             if (!lastTags.equals("")) {
                 String[] tagsSplit = lastTags.split(",");
                 for (int j = 0; j < tagsSplit.length; j++)
@@ -129,6 +133,34 @@ public class MainActivity extends AppCompatActivity {
                 b.putStringArray("Tags", tagsSplit);
                 i.putExtras(b);
             }
+            startActivity(i);
+        }
+    }
+
+    private void displayQualifications() {
+        String lastSearch = jobInput.getText().toString();
+        String lastLocation = locationInput.getText().toString().replaceAll(",", "%2C");
+
+        if (!lastSearch.equals("") && !lastLocation .equals("")) {
+
+            mDatabase.push().setValue(lastSearch);
+            String[] searchSplit = lastSearch.split("\\s+");
+            String[] locationSplit = lastLocation.split("\\s+");
+
+            String urlToAdd = "";
+            String locationToAdd = "";
+
+            for (int i = 0; i < searchSplit.length; i++)
+                urlToAdd += searchSplit[i] + "-";
+            urlToAdd = urlToAdd.substring(0, urlToAdd.length() - 1);
+            for (int i = 0; i < locationSplit.length; i++)
+                locationToAdd += locationSplit[i] + "+";
+            locationToAdd = locationToAdd.substring(0, locationToAdd.length() - 1);
+
+            Intent i = new Intent(this, QualificationsActivity.class);
+            String url = "https://www.indeed.com/jobs?q=" + urlToAdd + "&l=" + locationToAdd;
+            i.putExtra("URL", url);
+
             startActivity(i);
         }
     }
@@ -159,15 +191,9 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-//        if (requestCode == FIREBASE_REQUEST_CODE) {
-//            if (resultCode == Activity.RESULT_OK) {
-//                currentUser = mAuth.getCurrentUser();
-//            }
-//            updateUserInfo();
-//        } else
-            if (requestCode == SEARCHES_REQUEST_CODE) {
-                if (resultCode == Activity.RESULT_OK) {
-                    jobInput.setText(data.getStringExtra("Selected"));
+        if (requestCode == SEARCHES_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                jobInput.setText(data.getStringExtra("Selected"));
             }
         }
     }
