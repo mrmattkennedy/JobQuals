@@ -37,22 +37,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/jobInput" />
 
-    <EditText
-        android:id="@+id/jobInput3"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
-        android:layout_marginLeft="8dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:ems="10"
-        android:hint="Enter tags separated by ,"
-        android:inputType="textPersonName"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/jobInput2" />
-
     <Button
         android:id="@+id/searchbtn"
         android:layout_width="wrap_content"
@@ -62,18 +46,18 @@
         android:layout_marginTop="8dp"
         android:text="Search"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/jobInput2" />
 
     <Button
         android:id="@+id/clearBtn"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:layout_marginRight="16dp"
         android:text="Clear"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/jobInput2" />
 
     <Button
         android:id="@+id/qualsBtn"
@@ -87,35 +71,53 @@
         android:text="QUALIFICATIONS"
         app:layout_constraintEnd_toStartOf="@+id/clearBtn"
         app:layout_constraintStart_toEndOf="@+id/searchbtn"
-        app:layout_constraintTop_toBottomOf="@+id/radioGroup" />
+        app:layout_constraintTop_toBottomOf="@+id/jobInput2" />
 
-    <RadioGroup
-        android:id="@+id/radioGroup"
-        android:layout_width="0dp"
+    <Switch
+        android:id="@+id/colorSwitch"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginLeft="8dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="8dp"
         android:layout_marginRight="8dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:textOff="Off"
+        android:textOn="On"
+        app:chainUseRtl="false"
+        app:layout_constraintEnd_toStartOf="@+id/rightLabel"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toEndOf="@+id/leftLabel"
+        app:layout_constraintTop_toBottomOf="@+id/qualsBtn" />
+
+    <TextView
+        android:id="@+id/leftLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Light"
+        app:chainUseRtl="false"
+        app:layout_constraintEnd_toStartOf="@+id/colorSwitch"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/jobInput3">
+        app:layout_constraintTop_toBottomOf="@+id/qualsBtn" />
 
-        <RadioButton
-            android:id="@+id/requiredRadio"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="Required" />
+    <TextView
+        android:id="@+id/rightLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="Dark"
+        app:chainUseRtl="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toEndOf="@+id/colorSwitch"
+        app:layout_constraintTop_toBottomOf="@+id/qualsBtn" /><![CDATA[
 
-        <RadioButton
-            android:id="@+id/avoidRadio"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_weight="1"
-            android:text="Avoid" />
-    </RadioGroup><![CDATA[
+
 
 
 
@@ -123,6 +125,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:srcCompat="@android:drawable/checkbox_on_background" />
+
 
 
 ]]>

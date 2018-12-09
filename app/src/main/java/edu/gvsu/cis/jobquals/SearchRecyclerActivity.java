@@ -2,6 +2,7 @@ package edu.gvsu.cis.jobquals;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
@@ -29,13 +30,9 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
 
     SearchRecyclerAdapter adapter;
     private Button selectBtn;
-//    private Button clearSearchesBtn;
     private Button cancelBtn;
     private FirebaseDatabase mDatabase;
-//    private FirebaseAuth mAuth;
     private DatabaseReference mRef;
-//    private FirebaseUser user;
-//    private String userID;
     private ArrayList<String> recentSearches;
     private String selected = null;
     int max = 25;
@@ -46,13 +43,9 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
         setContentView(R.layout.activity_searches);
 
         selectBtn = findViewById(R.id.selectBtn);
-//        clearSearchesBtn = findViewById(R.id.clearSearchesBtn);
         cancelBtn = findViewById(R.id.cancelBtn);
-//        mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance();
         mRef = mDatabase.getReference();
-//        user = mAuth.getCurrentUser();
-//        userID = user.getUid();
         recentSearches = new ArrayList<>();
 
         mRef.addValueEventListener(new ValueEventListener() {
@@ -84,8 +77,9 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
         });
 
         selectBtn.setOnClickListener(v -> select());
-//        clearSearchesBtn.setOnClickListener(v -> clearSearches());
         cancelBtn.setOnClickListener(v -> cancel());
+        int secondaryColor = getResources().getColor(R.color.minimal_lavender);
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
     }
 
     private void setUpRecyclerView() {
@@ -96,16 +90,10 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
         adapter.setClickListener(this);
         recyclerView.setAdapter(adapter);
 
-        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
-                layoutManager.getOrientation());
-        recyclerView.addItemDecoration(dividerItemDecoration);
+//        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+//                layoutManager.getOrientation());
+//        recyclerView.addItemDecoration(dividerItemDecoration);
     }
-
-//    private void clearSearches() {
-//        mRef.child("users").removeValue();
-//        recentSearches.clear();
-//        setUpRecyclerView();
-//    }
 
     private void cancel() {
         Intent i = new Intent(SearchRecyclerActivity.this, MainActivity.class);
@@ -115,7 +103,6 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
 
     private void select() {
         Intent i = new Intent(SearchRecyclerActivity.this, MainActivity.class);
-//        if (selected != null)
         i.putExtra("Selected", selected.toString());
         setResult(Activity.RESULT_OK, i);
         finish();

@@ -1,11 +1,13 @@
 package edu.gvsu.cis.jobquals;
 
 import android.content.Intent;
+import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.TextView;
 
@@ -24,6 +26,13 @@ public class QualificationsActivity extends AppCompatActivity {
     private TextView qualificationsDisp;
     private String data;
 
+    private String[] requiredTags;
+    private String[] avoidTags;
+    private Boolean bodyCheckReq = null;
+    private Boolean titleCheckReq = null;
+    private Boolean bodyCheckIll = null;
+    private Boolean titleCheckIll = null;
+
     @Override
     //only called once
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,6 +45,24 @@ public class QualificationsActivity extends AppCompatActivity {
         doneBtn.setOnClickListener(v -> finish());
 
         Intent intent = getIntent();
+        Bundle b = intent.getExtras();
+        for (String key : b.keySet()) {
+            if (key.equals("RequiredTags")) {
+                requiredTags = b.getStringArray("RequiredTags");
+            } else if (key.equals("AvoidTags")) {
+                avoidTags = b.getStringArray("AvoidTags");
+            } else if (key.equals("CheckBodyReq")) {
+                bodyCheckReq = b.getBoolean("CheckBodyReq");
+            } else if (key.equals("CheckTitleReq")) {
+                titleCheckReq = b.getBoolean("CheckTitleReq");
+            } else if (key.equals("CheckBodyIll")) {
+                bodyCheckIll = b.getBoolean("CheckBodyIll");
+            } else if (key.equals("CheckTitleIll")) {
+                titleCheckIll = b.getBoolean("CheckTitleIll");
+            }
+        }
+
+
         String url = getIntent().getStringExtra("URL");
         new Async().execute(url);
         while (data == null) {
@@ -47,6 +74,8 @@ public class QualificationsActivity extends AppCompatActivity {
         }
         qualificationsDisp.setMovementMethod(new ScrollingMovementMethod());
         qualificationsDisp.setText(Html.fromHtml(data));
+        int secondaryColor = getResources().getColor(R.color.minimal_lavender);
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
     }
 
     public class Async extends AsyncTask<String, Integer, Object> {
@@ -65,9 +94,8 @@ public class QualificationsActivity extends AppCompatActivity {
             return null;
         }
 
-        private String getQualifications(String urlString) throws Exception {
+        private String getQualifications(String urlString) {
             Document document;
-            StringBuilder builder = new StringBuilder();
             List<String> linkBuilder = new ArrayList<String>();
             try {
                 //Get Document object after parsing the html from given url.
@@ -81,9 +109,31 @@ public class QualificationsActivity extends AppCompatActivity {
                 }
 
                 StringBuilder qualifications = new StringBuilder();
-                for (String job : linkBuilder) {
+                for (int i = 0; i < linkBuilder.size(); i++) {
+                    if ((requiredTags != null && requiredTags.length != 0) || (avoidTags != null && avoidTags.length != 0)) {
+                        document = Jsoup.connect(linkBuilder.get(i)).get();
+                        String body = document.body().text();
+                        String title = document.title();
+
+                        if (requiredTags != null)
+                            for (String requiredTag : requiredTags) {
+                                if (!body.toLowerCase().contains(requiredTag.toLowerCase()) && bodyCheckReq)
+                                    continue;
+                                if (!title.toLowerCase().contains(requiredTag.toLowerCase()) && titleCheckReq)
+                                    continue;
+                            }
+
+
+                        if (avoidTags != null)
+                            for (String avoidTag : avoidTags) {
+                                if (!body.toLowerCase().contains(avoidTag.toLowerCase()) && bodyCheckIll)
+                                    continue;
+                                if (!title.toLowerCase().contains(avoidTag.toLowerCase()) && titleCheckIll)
+                                    continue;
+                            }
+                    }
                     try {
-                        document = Jsoup.connect(job).get();
+                        document = Jsoup.connect(linkBuilder.get(i)).get();
                         String req = document.select("P:contains(require)").next().toString();
                         String quals = document.select("P:contains(qualification)").next().toString();
 

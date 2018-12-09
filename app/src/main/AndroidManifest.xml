@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+
+<manifest android:targetSandboxVersion="1"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+
     xmlns:androind="http://schemas.android.com/apk/res-auto"
     package="edu.gvsu.cis.jobquals">
 
@@ -33,13 +36,13 @@
             android:name=".SearchRecyclerActivity"
             android:label="@string/app_name"></activity>
         <activity
-            android:name=".TestClass"
-            android:label="@string/app_name"></activity>
-        <activity
             android:name=".SingleJobActivity"
             android:label="@string/app_name"></activity>
         <activity
             android:name=".QualificationsActivity"
+            android:label="@string/app_name"></activity>
+        <activity
+            android:name=".SettingsActivity"
             android:label="@string/app_name"></activity>
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.

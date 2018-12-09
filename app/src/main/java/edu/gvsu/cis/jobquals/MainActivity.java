@@ -1,17 +1,26 @@
 package edu.gvsu.cis.jobquals;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.RadioButton;
+import android.widget.RelativeLayout;
+import android.widget.Switch;
+import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -20,51 +29,72 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
 public class MainActivity extends AppCompatActivity {
 
-//    private FirebaseAuth mAuth;
     private String userId;
     private DatabaseReference mDatabase;
     private EditText jobInput;
     private EditText locationInput;
-    private EditText avoidInput;
     private Button searchBtn;
-//    private Button signOutBtn;
-    private RadioButton requiredRadio;
-    private RadioButton avoidRadio;
-//    private ImageButton userBtn;
-//    private FirebaseUser currentUser;
     private String data;
-//    private final int FIREBASE_REQUEST_CODE = 2;
     private Button qualsBtn;
+    private Switch colorSwitch;
+    private TextView leftLabel;
+    private TextView rightLabel;
+
+    private String requiredTags;
+    private String avoidTags;
+    private String salary = "";
+    private int addressCount;
+    private String jobType = "";
+    private boolean bodyCheckReq = false;
+    private boolean titleCheckReq = false;
+    private boolean bodyCheckIll = false;
+    private boolean titleCheckIll = false;
+    private final int SETTINGS_REQUEST_CODE = 2;
     private final int SEARCHES_REQUEST_CODE = 3;
+    private int primaryColor;
+    private int secondaryColor;
+    private int backgroundColor;
+    private int editTextColor;
+    private ColorStateList oldColors;
 
     @Override
     //only called once
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        mAuth = FirebaseAuth.getInstance();
         mDatabase = FirebaseDatabase.getInstance().getReference("users");
-//        currentUser = mAuth.getCurrentUser();
 
         jobInput = findViewById(R.id.jobInput);
         locationInput = findViewById(R.id.jobInput2);
-        avoidInput = findViewById(R.id.jobInput3);
         searchBtn = findViewById(R.id.searchbtn);
         qualsBtn = findViewById(R.id.qualsBtn);
-//        userBtn = findViewById(R.id.userBtn);
-//        signOutBtn = findViewById(R.id.signOutBtn);
-        requiredRadio = findViewById(R.id.requiredRadio);
-        avoidRadio = findViewById(R.id.avoidRadio);
+        colorSwitch = findViewById(R.id.colorSwitch);
+        leftLabel = findViewById(R.id.leftLabel);
+        rightLabel = findViewById(R.id.rightLabel);
 
         searchBtn.setOnClickListener(v -> jobSearch());
         qualsBtn.setOnClickListener(v -> displayQualifications());
-//        signOutBtn.setOnClickListener(v -> signOut());
-//        userBtn.setOnClickListener(v -> changeUser());
+        colorSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> changeColor());
 
-//        if (currentUser == null)
-//            changeUser();
-//        else
-//            updateUserInfo();
+        primaryColor = getResources().getColor(R.color.minimal_dusty);
+        secondaryColor = getResources().getColor(R.color.minimal_lavender);
+        backgroundColor = getResources().getColor(R.color.minimal_overcast);
+        editTextColor = getResources().getColor(R.color.minimal_paper);
+
+        ConstraintLayout layout = findViewById(R.id.layout);
+        layout.setBackgroundColor(backgroundColor);
+
+        jobInput.setBackgroundColor(editTextColor);
+        jobInput.setTextColor(primaryColor);
+        jobInput.setHintTextColor(primaryColor);
+
+        locationInput.setBackgroundColor(editTextColor);
+        locationInput.setTextColor(primaryColor);
+        locationInput.setHintTextColor(primaryColor);
+
+        oldColors = rightLabel.getTextColors();
+
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
     }
 
     @Override
@@ -86,7 +116,9 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.settings) {
-            //do stuff
+            Intent i = new Intent(this, SettingsActivity.class);
+            i.putExtra("Dark", colorSwitch.isChecked());
+            startActivityForResult(i, SETTINGS_REQUEST_CODE);
         } else if (item.getItemId() == R.id.recentSearches) {
             Intent i = new Intent(this, SearchRecyclerActivity.class);
             startActivityForResult(i, SEARCHES_REQUEST_CODE);
@@ -98,12 +130,10 @@ public class MainActivity extends AppCompatActivity {
     private void jobSearch() {
         String lastSearch = jobInput.getText().toString();
         String lastLocation = locationInput.getText().toString().replaceAll(",", "%2C");
-        String lastTags = avoidInput.getText().toString();
 
-        if (!lastSearch.equals("") && !lastLocation .equals("") &&
-                (avoidRadio.isChecked() || requiredRadio.isChecked())) {
+        if (!lastSearch.equals("") && !lastLocation .equals("")) {
 
-            mDatabase.push().setValue(lastSearch);
+            mDatabase.push().setValue(lastSearch + " - " + lastLocation);
 
             String[] searchSplit = lastSearch.split("\\s+");
             String[] locationSplit = lastLocation.split("\\s+");
@@ -118,23 +148,66 @@ public class MainActivity extends AppCompatActivity {
                 locationToAdd += locationSplit[i] + "+";
             locationToAdd = locationToAdd.substring(0, locationToAdd.length() - 1);
 
-            Intent i = new Intent(this, MapsActivity.class);
-            String url = "https://www.indeed.com/jobs?q=" + urlToAdd + "&l=" + locationToAdd;
-//            avoidInput.setText(url);
-            boolean required = requiredRadio.isChecked();
-            i.putExtra("URL", url);
-            i.putExtra("Required", required);
-            i.putExtra("Location", locationToAdd);
-            if (!lastTags.equals("")) {
-                String[] tagsSplit = lastTags.split(",");
+            Bundle b = new Bundle();
+
+            if (requiredTags != null && !requiredTags.isEmpty()) {
+                String[] tagsSplit = requiredTags.split(",");
                 for (int j = 0; j < tagsSplit.length; j++)
                     tagsSplit[j] = tagsSplit[j].trim();
-                Bundle b = new Bundle();
-                b.putStringArray("Tags", tagsSplit);
-                i.putExtras(b);
+                b.putStringArray("RequiredTags", tagsSplit);
             }
+
+            if (avoidTags != null && !avoidTags.isEmpty()) {
+                String[] tagsSplit = avoidTags.split(",");
+                for (int j = 0; j < tagsSplit.length; j++)
+                    tagsSplit[j] = tagsSplit[j].trim();
+                b.putStringArray("AvoidTags", tagsSplit);
+            }
+
+            b.putString("Salary", salary);
+            b.putInt("AddressCount", addressCount);
+            b.putString("JobType", jobType);
+
+            Intent i = new Intent(this, MapsActivity.class);
+            String url = "https://www.indeed.com/jobs?q=" + urlToAdd + "+" + salary +"&l=" + locationToAdd + jobType;
+            i.putExtra("URL", url);
+            i.putExtra("Location", locationToAdd);
+            i.putExtras(b);
             startActivity(i);
         }
+    }
+
+    private void changeColor() {
+        if (colorSwitch.isChecked()) {
+            primaryColor = getResources().getColor(R.color.dark_text);
+            secondaryColor = getResources().getColor(R.color.dark_actionbar);
+            backgroundColor = getResources().getColor(R.color.dark_background);
+            editTextColor = getResources().getColor(R.color.dark_text_border);
+
+            leftLabel.setTextColor(primaryColor);
+            rightLabel.setTextColor(primaryColor);
+        } else {
+            primaryColor = getResources().getColor(R.color.minimal_dusty);
+            secondaryColor = getResources().getColor(R.color.minimal_lavender);
+            backgroundColor = getResources().getColor(R.color.minimal_overcast);
+            editTextColor = getResources().getColor(R.color.minimal_paper);
+
+            leftLabel.setTextColor(oldColors);
+            rightLabel.setTextColor(oldColors);
+        }
+
+        ConstraintLayout layout = findViewById(R.id.layout);
+        layout.setBackgroundColor(backgroundColor);
+
+        jobInput.setBackgroundColor(editTextColor);
+        jobInput.setTextColor(primaryColor);
+        jobInput.setHintTextColor(primaryColor);
+
+        locationInput.setBackgroundColor(editTextColor);
+        locationInput.setTextColor(primaryColor);
+        locationInput.setHintTextColor(primaryColor);
+
+        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
     }
 
     private void displayQualifications() {
@@ -143,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
 
         if (!lastSearch.equals("") && !lastLocation .equals("")) {
 
-            mDatabase.push().setValue(lastSearch);
+            mDatabase.push().setValue(lastSearch + " - " + locationInput.getText().toString());
             String[] searchSplit = lastSearch.split("\\s+");
             String[] locationSplit = lastLocation.split("\\s+");
 
@@ -151,49 +224,68 @@ public class MainActivity extends AppCompatActivity {
             String locationToAdd = "";
 
             for (int i = 0; i < searchSplit.length; i++)
-                urlToAdd += searchSplit[i] + "-";
+                urlToAdd += searchSplit[i] + "+";
             urlToAdd = urlToAdd.substring(0, urlToAdd.length() - 1);
             for (int i = 0; i < locationSplit.length; i++)
                 locationToAdd += locationSplit[i] + "+";
             locationToAdd = locationToAdd.substring(0, locationToAdd.length() - 1);
+            Bundle b = new Bundle();
+
+            if (requiredTags != null && !requiredTags.isEmpty()) {
+                String[] tagsSplit = requiredTags.split(",");
+                for (int j = 0; j < tagsSplit.length; j++)
+                    tagsSplit[j] = tagsSplit[j].trim();
+                b.putStringArray("RequiredTags", tagsSplit);
+            }
+
+            if (avoidTags != null && !avoidTags.isEmpty()) {
+                String[] tagsSplit = avoidTags.split(",");
+                for (int j = 0; j < tagsSplit.length; j++)
+                    tagsSplit[j] = tagsSplit[j].trim();
+                b.putStringArray("AvoidTags", tagsSplit);
+            }
+
+            b.putBoolean("CheckBodyReq", bodyCheckReq);
+            b.putBoolean("CheckTitleReq", titleCheckReq);
+            b.putBoolean("CheckBodyIll", bodyCheckIll);
+            b.putBoolean("CheckTitleIll", titleCheckIll);
 
             Intent i = new Intent(this, QualificationsActivity.class);
-            String url = "https://www.indeed.com/jobs?q=" + urlToAdd + "&l=" + locationToAdd;
+            String url = "https://www.indeed.com/jobs?q=" + urlToAdd + "+" + salary +"&l=" + locationToAdd + jobType;
             i.putExtra("URL", url);
+            i.putExtras(b);
 
             startActivity(i);
         }
     }
 
-//    private void changeUser() {
-//        Intent i = new Intent(this, FirebaseUIActivity.class);
-//        startActivityForResult(i, FIREBASE_REQUEST_CODE);
-//    }
-
-//    private void updateUserInfo() {
-//        if (currentUser != null) {
-//            ConstraintLayout layout = findViewById(R.id.layout);
-//            Snackbar.make(layout, "Logged in as " + currentUser.getEmail(), Snackbar.LENGTH_SHORT).show();
-//            userId = currentUser.getUid();
-//            Picasso.get().load(currentUser.getPhotoUrl()).into(userBtn);
-//        } else {
-//            ConstraintLayout layout = findViewById(R.id.layout);
-//            Snackbar.make(layout, "Not signed in.", Snackbar.LENGTH_SHORT).show();
-//            userBtn.setImageDrawable(getResources().getDrawable(R.drawable.common_google_signin_btn_icon_dark));
-//            userId = null;
-//        }
-//    }
-//
-//    public void signOut() {
-//        mAuth.signOut();
-//        updateUserInfo();
-//    }
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == SEARCHES_REQUEST_CODE) {
             if (resultCode == Activity.RESULT_OK) {
-                jobInput.setText(data.getStringExtra("Selected"));
+                String[] temp = data.getStringExtra("Selected").split("-");
+                jobInput.setText(temp[0].trim());
+                locationInput.setText(temp[1].trim());
+            }
+        } else if (requestCode == SETTINGS_REQUEST_CODE) {
+            if (resultCode == Activity.RESULT_OK) {
+                requiredTags = data.getStringExtra("RequiredTags");
+                avoidTags = data.getStringExtra("AvoidTags");
+                salary = data.getStringExtra("Salary");
+                addressCount = Integer.parseInt(data.getStringExtra("AddressCount"));
+                jobType = data.getStringExtra("JobType");
+                bodyCheckReq = data.getBooleanExtra("CheckBodyReq", false);
+                titleCheckReq = data.getBooleanExtra("CheckTitleReq", false);
+                bodyCheckIll = data.getBooleanExtra("CheckBodyIll", false);
+                titleCheckIll = data.getBooleanExtra("CheckTitleIll", false);
+
+                if (!salary.isEmpty())
+                    salary = "$" + salary;
+
+                if (!jobType.equals("All"))
+                    jobType = "&jt=" + jobType.replaceAll("\\s+", "");
+                else
+                    jobType = "";
             }
         }
     }

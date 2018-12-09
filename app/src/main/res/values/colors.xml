@@ -7,4 +7,19 @@
     <color name="grey_100">#F5F5F5</color>
     <color name="grey_300">#E0E0E0</color>
     <color name="grey_500">#9E9E9E</color>
+
+    <color name="muted_gold">#C0B273</color>
+    <color name="muted_silk">#DCD0C0</color>
+    <color name="muted_paper">#F4F4F4</color>
+    <color name="muted_charcoal">#373737</color>
+
+    <color name="minimal_dusty">#96858F</color>
+    <color name="minimal_lavender">#6D7993</color>
+    <color name="minimal_overcast">#9099A2</color>
+    <color name="minimal_paper">#D5D5D5</color>
+
+    <color name="dark_background">#222629</color>
+    <color name="dark_text">#F0EBF4</color>
+    <color name="dark_actionbar">#474B4f</color>
+    <color name="dark_text_border">#6B6E70</color>
 </resources>

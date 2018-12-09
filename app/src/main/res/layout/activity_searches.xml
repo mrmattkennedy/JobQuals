@@ -46,13 +46,6 @@
             android:text="SELECT" />
 
         <Button
-            android:id="@+id/clearSearchesBtn"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="CLEAR SEARCHES" />
-
-        <Button
             android:id="@+id/cancelBtn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

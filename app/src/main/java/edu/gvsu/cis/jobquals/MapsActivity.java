@@ -1,12 +1,17 @@
 package edu.gvsu.cis.jobquals;
 
+import android.app.ActionBar;
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -49,7 +54,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private GoogleMap mMap;
     SearchRecyclerAdapter adapter;
     private Button doneBtn;
-    private String[] tags = null;
     private boolean requiredBool;
     private Boolean readSuccess = null;
     private List<String> nextPages;
@@ -59,7 +63,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private Map<String, String> states = new HashMap<String, String>();
     ArrayList<String> companies = new ArrayList<String>();
     ArrayList<String> addresses = new ArrayList<String>();
-    private static final int MAX_ADDRESSES = 10;
+
+    private String[] requiredTags;
+    private String[] avoidTags;
+    private String salary;
+    private int addressCount;
+    private String jobType;
+    private Boolean bodyCheckReq = null;
+    private Boolean titleCheckReq = null;
+    private Boolean bodyCheckIll = null;
+    private Boolean titleCheckIll = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -95,9 +108,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         String locUrl = "https://nominatim.openstreetmap.org/search.php?q=" + loc + "&polygon_geojson=1&viewbox=";
         requiredBool = intent.getBooleanExtra("Required", false);
         Bundle b = intent.getExtras();
-        for (String key : b.keySet())
-            if (key.equals("Tags"))
-                tags = b.getStringArray("Tags");
+        for (String key : b.keySet()) {
+            if (key.equals("RequiredTags")) {
+                requiredTags = b.getStringArray("RequiredTags");
+            } else if (key.equals("AvoidTags")) {
+                avoidTags = b.getStringArray("AvoidTags");
+            } else if (key.equals("Salary")) {
+                salary = b.getString("Salary");
+            } else if (key.equals("JobType")) {
+                jobType = b.getString("JobType");
+            } else if (key.equals("AddressCount")) {
+                addressCount = b.getInt("AddressCount");
+            } else if (key.equals("CheckBodyReq")) {
+                bodyCheckReq = b.getBoolean("CheckBodyReq");
+            } else if (key.equals("CheckTitleReq")) {
+                titleCheckReq = b.getBoolean("CheckTitleReq");
+            } else if (key.equals("CheckBodyIll")) {
+                bodyCheckIll = b.getBoolean("CheckBodyIll");
+            } else if (key.equals("CheckTitleIll")) {
+                titleCheckIll = b.getBoolean("CheckTitleIll");
+            }
+        }
+
         new Async().execute(url, locUrl);
         while (readSuccess == null || data == null) {
             try {
@@ -107,8 +139,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
-        setUpRecyclerView();
+        if (readSuccess)
+            setUpRecyclerView();
+
+//        int secondaryColor = getResources().getColor(R.color.minimal_lavender);
+//        getActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
     }
+
 
 
     /**
@@ -131,44 +168,45 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
-        try {
-            JSONObject obj = new JSONObject(data);
-            JSONArray arr = obj.getJSONArray("geometries").getJSONObject(0).getJSONArray("coordinates").getJSONArray(0).getJSONArray(0);
-            PolygonOptions polyopts = new PolygonOptions();
-            String temp = null;
-            double lat, lng;
-            for (int i = 0; i < arr.length(); i++) {
-                temp = arr.getString(i);
-                lng = Float.parseFloat(temp.substring(1, temp.indexOf(",")));
-                lat = Float.parseFloat(temp.substring(temp.indexOf(",") + 1, temp.length() - 1));
-                polyopts.add(new LatLng(lat, lng));
-            }
-
-            LatLng centerLatLng = null;
-            LatLngBounds.Builder builder = new LatLngBounds.Builder();
-            List<LatLng> tempList =  polyopts.getPoints();
-            for(int i = 0 ; i < tempList.size() ; i++)
-            {
-                builder.include(tempList.get(i));
-            }
-            LatLngBounds bounds = builder.build();
-            centerLatLng =  bounds.getCenter();
-
-            LatLng tempLoc = null;
-            for (int i = 0; i < addresses.size(); i++)
-                try {
-                    tempLoc = getLocationFromAddress(this, addresses.get(i));
-                    mMap.addMarker(new MarkerOptions().position(tempLoc).title(companies.get(i)));
-                } catch (Exception e1) {
-                 ;
+        if (!data.equals("fail")) {
+            try {
+                JSONObject obj = new JSONObject(data);
+                JSONArray arr = obj.getJSONArray("geometries").getJSONObject(0).getJSONArray("coordinates").getJSONArray(0).getJSONArray(0);
+                PolygonOptions polyopts = new PolygonOptions();
+                String temp = null;
+                double lat, lng;
+                for (int i = 0; i < arr.length(); i++) {
+                    temp = arr.getString(i);
+                    lng = Float.parseFloat(temp.substring(1, temp.indexOf(",")));
+                    lat = Float.parseFloat(temp.substring(temp.indexOf(",") + 1, temp.length() - 1));
+                    polyopts.add(new LatLng(lat, lng));
                 }
 
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(centerLatLng));
-            mMap.animateCamera( CameraUpdateFactory.zoomTo( 10.0f ));
+                LatLng centerLatLng = null;
+                LatLngBounds.Builder builder = new LatLngBounds.Builder();
+                List<LatLng> tempList = polyopts.getPoints();
+                for (int i = 0; i < tempList.size(); i++) {
+                    builder.include(tempList.get(i));
+                }
+                LatLngBounds bounds = builder.build();
+                centerLatLng = bounds.getCenter();
 
-            googleMap.addPolygon(polyopts);
-        } catch (Exception e ) {
-            e.printStackTrace();
+                LatLng tempLoc = null;
+                for (int i = 0; i < addresses.size(); i++)
+                    try {
+                        tempLoc = getLocationFromAddress(this, addresses.get(i));
+                        mMap.addMarker(new MarkerOptions().position(tempLoc).title(companies.get(i)));
+                    } catch (Exception e1) {
+                        ;
+                    }
+
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(centerLatLng));
+                mMap.animateCamera(CameraUpdateFactory.zoomTo(10.0f));
+
+                googleMap.addPolygon(polyopts);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
         }
     }
 
@@ -215,6 +253,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
             try {
                 readSuccess = readUrl(params[0]);
+                if (readSuccess == false)
+                    data = "fail";
                 getCoords(params[1]);
 
                 return null;
@@ -225,17 +265,26 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return null;
         }
 
-        private boolean readUrl(String urlString) throws Exception {
+        private boolean readUrl(String urlString) {
             try {
+                //Read the initial first page of jobs.
                 Document doc = Jsoup.connect(urlString).get();
                 Elements elements = doc.select("a[href]");
                 nextPages = new ArrayList<String>();
                 jobs = new ArrayList<String>();
 
+                //Get next 5 pages.
                 for (Element link : elements)
                     if (link.attr("href").contains("start="))
                         nextPages.add(link.attr("abs:href").toString());
 
+                //Remove duplicates for nextPages
+                Set<String> hs = new HashSet<>();
+                hs.addAll(nextPages);
+                nextPages.clear();
+                nextPages.addAll(hs);
+
+                //Loop through each page, get job url
                 nextPages.add(urlString);
                 for (String nextPage : nextPages) {
                     doc = Jsoup.connect(nextPage).get();
@@ -247,33 +296,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     }
                 }
-                Set<String> hs = new HashSet<>();
-                hs.addAll(nextPages);
-                nextPages.clear();
-                nextPages.addAll(hs);
 
                 int count = 0;
-                for (String job : jobs) {
-                    if (count++ >= MAX_ADDRESSES)
-                        break;
-                    doc = Jsoup.connect(job).get();
+                for (int i = 0; i < jobs.size(); i++) {
+                    if ((requiredTags != null && requiredTags.length != 0) || (avoidTags != null && avoidTags.length != 0)) {
+                        doc = Jsoup.connect(jobs.get(i)).get();
+                        String body = doc.body().text();
+
+                        if (requiredTags != null)
+                            for (String requiredTag : requiredTags) {
+                                if (!body.toLowerCase().contains(requiredTag.toLowerCase()) && bodyCheckReq)
+                                    continue;
+                                if (!titles.get(i).toLowerCase().contains(requiredTag.toLowerCase()) && titleCheckReq)
+                                    continue;
+                            }
+
+
+                        if (avoidTags != null)
+                            for (String avoidTag : avoidTags) {
+                                if (!body.toLowerCase().contains(avoidTag.toLowerCase()) && bodyCheckIll)
+                                    continue;
+                                if (!titles.get(i).toLowerCase().contains(avoidTag.toLowerCase()) && titleCheckIll)
+                                    continue;
+                            }
+                    }
+                    if (count++ >= addressCount)
+                        continue;
+
                     elements = doc.getElementsByClass("icl-u-lg-mr--sm icl-u-xs-mr--xs");
                     String company = elements.text().substring(0, elements.text().length() - 1).trim();
                     companies.add(company);
-//                    String companyQuery = company.replaceAll("\\s", "+");
-//                    companyQuery = companyQuery.replaceAll(",", "%2C").substring(0, companyQuery.length() - 1);
-//                    doc = Jsoup.connect("https://www.google.com/search?q=" + companyQuery + "+address").get();
-//                    elements = doc.select("a[href]");
-
-//                    String addressLink = null;
-//                    for (Element link : elements)
-//                        if (link.attr("href").contains("address")) {
-//                            addressLink = link.attr("abs:href");
-//                            break;
-//                        }
-//                    if (addressLink == null) {
-//                        addressLink
-//                    }
 
                     try {
                         String companyQuery = company.replaceAll("\\s", "+");
@@ -295,12 +347,21 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
 
 			    }
+
+			    for (int i = 0; i < titles.size(); i++) {
+                    if (avoidTags != null) {
+                        for (String avoidTag : avoidTags) {
+                            if (titles.get(i).toLowerCase().contains(avoidTag.toLowerCase()) && titleCheckIll) {
+                                jobs.remove(i);
+                                titles.remove(i);
+                            }
+                        }
+                    }
+                }
 			    for (int i = 0; i < addresses.size(); i++)
 				    Log.d("SYSTEMTAG", companies.get(i) + " : " + addresses.get(i));
                 return true;
-            } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+            } catch (Exception e) {
                 return false;
             }
         }
@@ -341,8 +402,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 doc = Jsoup.connect(links.get(0)).get();
                 data = doc.body().text();
             } catch (IOException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                data = "fail";
             }
         }
     }
