@@ -69,10 +69,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private String salary;
     private int addressCount;
     private String jobType;
-    private Boolean bodyCheckReq = null;
-    private Boolean titleCheckReq = null;
-    private Boolean bodyCheckIll = null;
-    private Boolean titleCheckIll = null;
+    private boolean bodyCheckReq;
+    private boolean titleCheckReq;
+    private boolean bodyCheckIll;
+    private boolean titleCheckIll;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -402,6 +402,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 doc = Jsoup.connect(links.get(0)).get();
                 data = doc.body().text();
             } catch (IOException e) {
+                e.printStackTrace();
                 data = "fail";
             }
         }

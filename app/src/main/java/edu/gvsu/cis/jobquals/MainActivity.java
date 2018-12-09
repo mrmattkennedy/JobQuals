@@ -168,6 +168,11 @@ public class MainActivity extends AppCompatActivity {
             b.putInt("AddressCount", addressCount);
             b.putString("JobType", jobType);
 
+            b.putBoolean("CheckBodyReq", bodyCheckReq);
+            b.putBoolean("CheckTitleReq", titleCheckReq);
+            b.putBoolean("CheckBodyIll", bodyCheckIll);
+            b.putBoolean("CheckTitleIll", titleCheckIll);
+
             Intent i = new Intent(this, MapsActivity.class);
             String url = "https://www.indeed.com/jobs?q=" + urlToAdd + "+" + salary +"&l=" + locationToAdd + jobType;
             i.putExtra("URL", url);
