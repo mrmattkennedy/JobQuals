@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.text.Html;
 import android.text.method.ScrollingMovementMethod;
@@ -33,6 +34,11 @@ public class QualificationsActivity extends AppCompatActivity {
     private Boolean bodyCheckIll = null;
     private Boolean titleCheckIll = null;
 
+    private int primaryColor;
+    private int secondaryColor;
+    private int backgroundColor;
+    private int editTextColor;
+
     @Override
     //only called once
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,6 +52,7 @@ public class QualificationsActivity extends AppCompatActivity {
 
         Intent intent = getIntent();
         Bundle b = intent.getExtras();
+        boolean dark = intent.getBooleanExtra("Dark", false);
         for (String key : b.keySet()) {
             if (key.equals("RequiredTags")) {
                 requiredTags = b.getStringArray("RequiredTags");
@@ -72,10 +79,27 @@ public class QualificationsActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
+        if (dark == true) {
+            primaryColor = getResources().getColor(R.color.dark_text);
+            secondaryColor = getResources().getColor(R.color.dark_actionbar);
+            backgroundColor = getResources().getColor(R.color.dark_background);
+            editTextColor = getResources().getColor(R.color.dark_text_border);
+        } else {
+            primaryColor = getResources().getColor(R.color.minimal_dusty);
+            secondaryColor = getResources().getColor(R.color.minimal_lavender);
+            backgroundColor = getResources().getColor(R.color.minimal_overcast);
+            editTextColor = getResources().getColor(R.color.minimal_paper);
+        }
+
         qualificationsDisp.setMovementMethod(new ScrollingMovementMethod());
         qualificationsDisp.setText(Html.fromHtml(data));
-        int secondaryColor = getResources().getColor(R.color.minimal_lavender);
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
+        ConstraintLayout layout = findViewById(R.id.layout);
+        layout.setBackgroundColor(backgroundColor);
+        qualificationsDisp.setBackgroundColor(editTextColor);
+        qualificationsDisp.setTextColor(primaryColor);
+        qualificationsDisp.setHintTextColor(primaryColor);
     }
 
     public class Async extends AsyncTask<String, Integer, Object> {

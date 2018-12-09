@@ -73,27 +73,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private boolean titleCheckReq;
     private boolean bodyCheckIll;
     private boolean titleCheckIll;
+    private static final String FAIL_CODE = "fail";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
-        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
-                .findFragmentById(R.id.map);
+
         doneBtn = findViewById(R.id.doneBtn);
         doneBtn.setOnClickListener(v -> finish());
-        mapFragment.getMapAsync(this);
         nextPages = new ArrayList<>();
         jobs = new ArrayList<>();
         titles = new ArrayList<>();
 
+        // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.map);
+        mapFragment.getMapAsync(this);
+
+        //Get intent data sent.
         Intent intent = getIntent();
         String url = intent.getStringExtra("URL");
         String loc = intent.getStringExtra("Location");
-        //"https://nominatim.openstreetmap.org/search.php?q=Grand+Rapids+michigan&polygon_geojson=1&viewbox="
         Iterator it = states.entrySet().iterator();
 
+        //Check if location contains state abbreviation.
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry)it.next();
             String val = pair.getValue().toString();
@@ -105,9 +109,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
             it.remove(); // avoids a ConcurrentModificationException
         }
+
+
         String locUrl = "https://nominatim.openstreetmap.org/search.php?q=" + loc + "&polygon_geojson=1&viewbox=";
         requiredBool = intent.getBooleanExtra("Required", false);
         Bundle b = intent.getExtras();
+
         for (String key : b.keySet()) {
             if (key.equals("RequiredTags")) {
                 requiredTags = b.getStringArray("RequiredTags");
@@ -130,6 +137,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
+        //Get data from async class.
         new Async().execute(url, locUrl);
         while (readSuccess == null || data == null) {
             try {
@@ -139,14 +147,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         }
 
+        //Successfully read job titles, set up recycler view.
         if (readSuccess)
             setUpRecyclerView();
-
-//        int secondaryColor = getResources().getColor(R.color.minimal_lavender);
-//        getActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
     }
-
-
 
     /**
      * Manipulates the map once available.
@@ -160,20 +164,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        while (readSuccess == null || data == null) {
-            try {
-                Thread.sleep(20);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
 
-        if (!data.equals("fail")) {
+        if (!data.equals(FAIL_CODE)) {
             try {
                 JSONObject obj = new JSONObject(data);
                 JSONArray arr = obj.getJSONArray("geometries").getJSONObject(0).getJSONArray("coordinates").getJSONArray(0).getJSONArray(0);
                 PolygonOptions polyopts = new PolygonOptions();
-                String temp = null;
+                String temp;
                 double lat, lng;
                 for (int i = 0; i < arr.length(); i++) {
                     temp = arr.getString(i);
@@ -205,23 +202,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 googleMap.addPolygon(polyopts);
             } catch (Exception e) {
-                e.printStackTrace();
+                ;
             }
+        } else {
+            Toast.makeText(this, "Failed to load map data.", Toast.LENGTH_LONG).show();
         }
+
+        if (titles.size() == 0)
+            Toast.makeText(this, "No jobs available.", Toast.LENGTH_LONG).show();
     }
 
     public LatLng getLocationFromAddress(Context context, String strAddress) throws Exception
     {
         Geocoder coder= new Geocoder(context);
         List<Address> address;
-        LatLng p1 = null;
 
         address = coder.getFromLocationName(strAddress, 5);
         if(address==null)
             return null;
 
         Address location = address.get(0);
-        p1 = new LatLng(location.getLatitude(), location.getLongitude());
+        LatLng p1 = new LatLng(location.getLatitude(), location.getLongitude());
 
         return p1;
     }
@@ -254,7 +255,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             try {
                 readSuccess = readUrl(params[0]);
                 if (readSuccess == false)
-                    data = "fail";
+                    data = FAIL_CODE;
                 getCoords(params[1]);
 
                 return null;
@@ -358,8 +359,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         }
                     }
                 }
-			    for (int i = 0; i < addresses.size(); i++)
-				    Log.d("SYSTEMTAG", companies.get(i) + " : " + addresses.get(i));
                 return true;
             } catch (Exception e) {
                 return false;
@@ -401,9 +400,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 doc = Jsoup.connect(links.get(0)).get();
                 data = doc.body().text();
-            } catch (IOException e) {
-                e.printStackTrace();
-                data = "fail";
+            } catch (Exception e) {
+                data = FAIL_CODE;
+                return;
             }
         }
     }

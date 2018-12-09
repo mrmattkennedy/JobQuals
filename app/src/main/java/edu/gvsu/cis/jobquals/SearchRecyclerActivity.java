@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
@@ -36,6 +37,11 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
     private ArrayList<String> recentSearches;
     private String selected = null;
     int max = 25;
+
+    private int primaryColor;
+    private int secondaryColor;
+    private int backgroundColor;
+    private int editTextColor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,8 +84,24 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
 
         selectBtn.setOnClickListener(v -> select());
         cancelBtn.setOnClickListener(v -> cancel());
-        int secondaryColor = getResources().getColor(R.color.minimal_lavender);
+
+        Intent intent = getIntent();
+        boolean dark = intent.getBooleanExtra("Dark", false);
+
+        if (dark == true) {
+            primaryColor = getResources().getColor(R.color.dark_text);
+            secondaryColor = getResources().getColor(R.color.dark_actionbar);
+            backgroundColor = getResources().getColor(R.color.dark_background);
+            editTextColor = getResources().getColor(R.color.dark_text_border);
+        } else {
+            primaryColor = getResources().getColor(R.color.minimal_dusty);
+            secondaryColor = getResources().getColor(R.color.minimal_lavender);
+            backgroundColor = getResources().getColor(R.color.minimal_overcast);
+            editTextColor = getResources().getColor(R.color.minimal_paper);
+        }
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
+        ConstraintLayout layout = findViewById(R.id.layout);
+        layout.setBackgroundColor(backgroundColor);
     }
 
     private void setUpRecyclerView() {
@@ -89,10 +111,10 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
         adapter = new SearchRecyclerAdapter(this, recentSearches);
         adapter.setClickListener(this);
         recyclerView.setAdapter(adapter);
-
-//        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
-//                layoutManager.getOrientation());
-//        recyclerView.addItemDecoration(dividerItemDecoration);
+        recyclerView.setBackgroundColor(editTextColor);
+        DividerItemDecoration dividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+                layoutManager.getOrientation());
+        recyclerView.addItemDecoration(dividerItemDecoration);
     }
 
     private void cancel() {
@@ -110,7 +132,7 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
 
     @Override
     public void onItemClick(View view, int position) {
-        Toast.makeText(this, "You clicked " + adapter.getItem(position) + " on row number " + position, Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "You clicked " + adapter.getItem(position), Toast.LENGTH_SHORT).show();
         selected = adapter.getItem(position);
     }
 }

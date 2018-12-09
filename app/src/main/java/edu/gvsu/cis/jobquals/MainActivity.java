@@ -22,6 +22,9 @@ import android.widget.RelativeLayout;
 import android.widget.Switch;
 import android.widget.TextView;
 
+import com.google.android.gms.analytics.GoogleAnalytics;
+import com.google.android.gms.analytics.HitBuilders;
+import com.google.android.gms.analytics.Tracker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
@@ -36,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     private Button searchBtn;
     private String data;
     private Button qualsBtn;
+    private Button clearBtn;
     private Switch colorSwitch;
     private TextView leftLabel;
     private TextView rightLabel;
@@ -56,6 +60,7 @@ public class MainActivity extends AppCompatActivity {
     private int backgroundColor;
     private int editTextColor;
     private ColorStateList oldColors;
+    private Tracker mTracker;
 
     @Override
     //only called once
@@ -68,12 +73,14 @@ public class MainActivity extends AppCompatActivity {
         locationInput = findViewById(R.id.jobInput2);
         searchBtn = findViewById(R.id.searchbtn);
         qualsBtn = findViewById(R.id.qualsBtn);
+        clearBtn = findViewById(R.id.clearBtn);
         colorSwitch = findViewById(R.id.colorSwitch);
         leftLabel = findViewById(R.id.leftLabel);
         rightLabel = findViewById(R.id.rightLabel);
 
         searchBtn.setOnClickListener(v -> jobSearch());
         qualsBtn.setOnClickListener(v -> displayQualifications());
+        clearBtn.setOnClickListener(v -> clearFields());
         colorSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> changeColor());
 
         primaryColor = getResources().getColor(R.color.minimal_dusty);
@@ -95,12 +102,14 @@ public class MainActivity extends AppCompatActivity {
         oldColors = rightLabel.getTextColors();
 
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
+
+        // Obtain the shared Tracker instance.
+        getTracker().setScreenName("JobQuals");
+        getTracker().send(new HitBuilders.ScreenViewBuilder().build()); // send screen name
     }
 
     @Override
-    public void onStart() {
-        super.onStart();
-    }
+    public void onStart() { super.onStart(); }
 
     /*
      * Creates the main menu and puts the settings menu resource file in.
@@ -121,19 +130,32 @@ public class MainActivity extends AppCompatActivity {
             startActivityForResult(i, SETTINGS_REQUEST_CODE);
         } else if (item.getItemId() == R.id.recentSearches) {
             Intent i = new Intent(this, SearchRecyclerActivity.class);
+            i.putExtra("Dark", colorSwitch.isChecked());
             startActivityForResult(i, SEARCHES_REQUEST_CODE);
         }
         return true;
     }
 
+    public Tracker getTracker() {
+        return GoogleAnalytics.getInstance(this).newTracker(R.xml.global_tracker);
+    }
+
+    private void clearFields() {
+        jobInput.setText("");
+        locationInput.setText("");
+    }
 
     private void jobSearch() {
         String lastSearch = jobInput.getText().toString();
         String lastLocation = locationInput.getText().toString().replaceAll(",", "%2C");
 
         if (!lastSearch.equals("") && !lastLocation .equals("")) {
+            getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Action")
+                    .setAction("Job Search")
+                    .build());
 
-            mDatabase.push().setValue(lastSearch + " - " + lastLocation);
+            mDatabase.push().setValue(lastSearch + " - " + locationInput.getText().toString());
 
             String[] searchSplit = lastSearch.split("\\s+");
             String[] locationSplit = lastLocation.split("\\s+");
@@ -220,6 +242,10 @@ public class MainActivity extends AppCompatActivity {
         String lastLocation = locationInput.getText().toString().replaceAll(",", "%2C");
 
         if (!lastSearch.equals("") && !lastLocation .equals("")) {
+            getTracker().send(new HitBuilders.EventBuilder()
+                    .setCategory("Action")
+                    .setAction("Qualifications Search")
+                    .build());
 
             mDatabase.push().setValue(lastSearch + " - " + locationInput.getText().toString());
             String[] searchSplit = lastSearch.split("\\s+");
@@ -257,6 +283,7 @@ public class MainActivity extends AppCompatActivity {
 
             Intent i = new Intent(this, QualificationsActivity.class);
             String url = "https://www.indeed.com/jobs?q=" + urlToAdd + "+" + salary +"&l=" + locationToAdd + jobType;
+            i.putExtra("Dark", colorSwitch.isChecked());
             i.putExtra("URL", url);
             i.putExtras(b);
 
