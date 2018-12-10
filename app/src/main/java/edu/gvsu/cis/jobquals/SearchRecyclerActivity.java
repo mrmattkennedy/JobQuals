@@ -69,11 +69,11 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
                     if (++currentVal <= max) {
                         String temp = childSnapshot.getValue(String.class);
                         recentSearches.add(temp);
-                        setUpRecyclerView();
                     } else {
                         childSnapshot.getRef().removeValue();
                     }
                 }
+                setUpRecyclerView();
             }
 
             @Override
@@ -81,7 +81,6 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
 
             }
         });
-
         selectBtn.setOnClickListener(v -> select());
         cancelBtn.setOnClickListener(v -> cancel());
 

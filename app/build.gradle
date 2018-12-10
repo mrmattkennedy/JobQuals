@@ -7,8 +7,8 @@ android {
         minSdkVersion 16
         targetSdkVersion 28
         multiDexEnabled true
-        versionCode 1
-        versionName "1.0"
+        versionCode 7
+        versionName "MapKeyUpdate"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {

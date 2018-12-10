@@ -2,6 +2,7 @@ package edu.gvsu.cis.jobquals;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.os.Bundle;
@@ -19,6 +20,8 @@ import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.google.android.gms.analytics.Tracker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -45,6 +48,9 @@ public class SettingsActivity extends AppCompatActivity  {
     private int secondaryColor;
     private int backgroundColor;
     private int editTextColor;
+    private boolean dark;
+
+    private ColorStateList oldColors;
 
     @Override
     //only called once
@@ -69,7 +75,7 @@ public class SettingsActivity extends AppCompatActivity  {
         doneBtn = findViewById(R.id.doneBtn);
 
         Intent intent = getIntent();
-        boolean dark = intent.getBooleanExtra("Dark", false);
+        dark = intent.getBooleanExtra("Dark", false);
 
         if (dark == true) {
             primaryColor = getResources().getColor(R.color.dark_text);
@@ -121,6 +127,8 @@ public class SettingsActivity extends AppCompatActivity  {
 
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
 
+        oldColors = bodyChkIll.getTextColors();
+
         addressSeek.setOnSeekBarChangeListener(new addressesListener());
         salarySeek.setOnSeekBarChangeListener(new salaryListener());
         salaryText.addTextChangedListener(new TextWatcher() {
@@ -164,7 +172,10 @@ public class SettingsActivity extends AppCompatActivity  {
         jobTypeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                ((TextView) parent.getChildAt(0)).setTextColor(primaryColor); /* if you want your item to be white */
+                if (dark)
+                    ((TextView) parent.getChildAt(0)).setTextColor(primaryColor); /* if you want your item to be white */
+                else
+                    ((TextView) parent.getChildAt(0)).setTextColor(oldColors);
             }
 
             @Override

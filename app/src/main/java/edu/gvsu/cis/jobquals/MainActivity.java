@@ -2,7 +2,9 @@ package edu.gvsu.cis.jobquals;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.ColorStateList;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
@@ -62,6 +64,8 @@ public class MainActivity extends AppCompatActivity {
     private ColorStateList oldColors;
     private Tracker mTracker;
 
+    private SharedPreferences prefs;
+
     @Override
     //only called once
     protected void onCreate(Bundle savedInstanceState) {
@@ -106,6 +110,15 @@ public class MainActivity extends AppCompatActivity {
         // Obtain the shared Tracker instance.
         getTracker().setScreenName("JobQuals");
         getTracker().send(new HitBuilders.ScreenViewBuilder().build()); // send screen name
+
+        prefs = getSharedPreferences("edu.gvsu.cis.jobquals", Context.MODE_PRIVATE);
+        String temp = prefs.getString("job", "");
+        if (!temp.equals(""))
+            jobInput.setText(temp);
+        temp = prefs.getString("loc", "");
+        if (!temp.equals(""))
+            locationInput.setText(temp);
+
     }
 
     @Override
@@ -143,6 +156,8 @@ public class MainActivity extends AppCompatActivity {
     private void clearFields() {
         jobInput.setText("");
         locationInput.setText("");
+        prefs.edit().remove("job").commit();
+        prefs.edit().remove("loc").commit();
     }
 
     private void jobSearch() {
@@ -156,6 +171,8 @@ public class MainActivity extends AppCompatActivity {
                     .build());
 
             mDatabase.push().setValue(lastSearch + " - " + locationInput.getText().toString());
+            prefs.edit().putString("job", lastSearch).commit();
+            prefs.edit().putString("loc", locationInput.getText().toString()).commit();
 
             String[] searchSplit = lastSearch.split("\\s+");
             String[] locationSplit = lastLocation.split("\\s+");
