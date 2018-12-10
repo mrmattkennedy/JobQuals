@@ -12,6 +12,8 @@ import android.support.constraint.ConstraintLayout;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -119,6 +121,29 @@ public class MainActivity extends AppCompatActivity {
         if (!temp.equals(""))
             locationInput.setText(temp);
 
+        jobInput.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void afterTextChanged(Editable s) { prefs.edit().putString("job", jobInput.getText().toString()).commit(); }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { ; }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) { ; }
+        });
+
+        locationInput.addTextChangedListener(new TextWatcher() {
+
+            @Override
+            public void afterTextChanged(Editable s) { prefs.edit().putString("loc", locationInput.getText().toString()).commit(); }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) { ; }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) { ; }
+        });
     }
 
     @Override
@@ -171,8 +196,6 @@ public class MainActivity extends AppCompatActivity {
                     .build());
 
             mDatabase.push().setValue(lastSearch + " - " + locationInput.getText().toString());
-            prefs.edit().putString("job", lastSearch).commit();
-            prefs.edit().putString("loc", locationInput.getText().toString()).commit();
 
             String[] searchSplit = lastSearch.split("\\s+");
             String[] locationSplit = lastLocation.split("\\s+");

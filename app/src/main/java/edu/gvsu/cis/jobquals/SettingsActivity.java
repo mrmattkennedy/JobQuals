@@ -49,6 +49,7 @@ public class SettingsActivity extends AppCompatActivity  {
     private int backgroundColor;
     private int editTextColor;
     private boolean dark;
+    private final String JOB_LABEL = "Job type: ";
 
     private ColorStateList oldColors;
 
@@ -159,13 +160,13 @@ public class SettingsActivity extends AppCompatActivity  {
             public void onTextChanged(CharSequence s, int start, int before, int count) { ; }
         });
         List jobTypes = new ArrayList<String>();
-        jobTypes.add("All");
-        jobTypes.add("Full time");
-        jobTypes.add("Contract");
-        jobTypes.add("Part time");
-        jobTypes.add("Internship");
-        jobTypes.add("Temporary");
-        jobTypes.add("Commission");
+        jobTypes.add(JOB_LABEL + "All");
+        jobTypes.add(JOB_LABEL + "Full time");
+        jobTypes.add(JOB_LABEL + "Contract");
+        jobTypes.add(JOB_LABEL + "Part time");
+        jobTypes.add(JOB_LABEL + "Internship");
+        jobTypes.add(JOB_LABEL + "Temporary");
+        jobTypes.add(JOB_LABEL + "Commission");
         // Creating adapter for spinner
         ArrayAdapter<String> dataAdapter = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_item, jobTypes);
 
@@ -198,6 +199,7 @@ public class SettingsActivity extends AppCompatActivity  {
         String addresses = addressesText.getText().toString();
         addresses = addresses.substring("Number of address to display:".length() + 1);
         String jobType = jobTypeSpinner.getSelectedItem().toString();
+        jobType = jobType.substring(jobType.indexOf(JOB_LABEL) + JOB_LABEL.length()).trim();
 
         if (!required.isEmpty() && (!bodyChkReq.isChecked() && !titleChkReq.isChecked())) {
             Toast.makeText(SettingsActivity.this, "Please selected where to check for required tags.", Toast.LENGTH_LONG).show();

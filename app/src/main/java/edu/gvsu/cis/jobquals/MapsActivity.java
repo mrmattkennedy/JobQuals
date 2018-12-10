@@ -204,12 +204,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             } catch (Exception e) {
                 ;
             }
-        } else {
-            Toast.makeText(this, "Failed to load map data.", Toast.LENGTH_LONG).show();
         }
 
-        if (titles.size() == 0)
-            Toast.makeText(this, "No jobs available.", Toast.LENGTH_LONG).show();
+        if (titles.size() == 0 && data.equals(FAIL_CODE))
+            Toast.makeText(this, "Failed to load map and job data.", Toast.LENGTH_LONG).show();
+        else if (titles.size() == 0)
+            Toast.makeText(this, "Failed to load job data.", Toast.LENGTH_LONG).show();
+        else if (data.equals(FAIL_CODE))
+            Toast.makeText(this, "Failed to load map data.", Toast.LENGTH_LONG).show();
     }
 
     public LatLng getLocationFromAddress(Context context, String strAddress) throws Exception
@@ -291,7 +293,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     doc = Jsoup.connect(nextPage).get();
                     elements = doc.select("a[href]");
                     for (Element link : elements) {
-                        if (link.attr("href").contains("clk?")) {
+                        if (link.attr("href").contains("clk?mo=r&ad")) {
                             jobs.add(link.attr("abs:href"));
                             titles.add(link.attr("title"));
                         }
@@ -300,8 +302,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 int count = 0;
                 for (int i = 0; i < jobs.size(); i++) {
+                    doc = Jsoup.connect(jobs.get(i)).get();
                     if ((requiredTags != null && requiredTags.length != 0) || (avoidTags != null && avoidTags.length != 0)) {
-                        doc = Jsoup.connect(jobs.get(i)).get();
                         String body = doc.body().text();
 
                         if (requiredTags != null)
@@ -321,12 +323,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     continue;
                             }
                     }
-                    if (count++ >= addressCount)
+                    if (count > addressCount)
                         continue;
 
-                    elements = doc.getElementsByClass("icl-u-lg-mr--sm icl-u-xs-mr--xs");
-                    String company = elements.text().substring(0, elements.text().length() - 1).trim();
-                    companies.add(company);
+                    String company;
+                    try {
+                        elements = doc.getElementsByClass("icl-u-lg-mr--sm icl-u-xs-mr--xs");
+                        company = elements.text().substring(0, elements.text().length() - 1).trim();
+                        companies.add(company);
+                    } catch (Exception e) {
+                        continue;
+                    }
 
                     try {
                         String companyQuery = company.replaceAll("\\s", "+");
@@ -337,14 +344,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         String address = elements.text();
                         if (address.isEmpty()) {
                             companies.remove(companies.size() - 1);
-                            count--;
                             continue;
                         }
                         addresses.add(address);
+                        count++;
 
                     } catch (Exception e1) {
                         companies.remove(companies.size() - 1);
-                        count--;
                     }
 
 			    }

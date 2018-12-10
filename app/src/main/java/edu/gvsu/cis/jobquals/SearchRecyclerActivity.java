@@ -131,7 +131,7 @@ public class SearchRecyclerActivity extends AppCompatActivity implements SearchR
 
     @Override
     public void onItemClick(View view, int position) {
-        Toast.makeText(this, "You clicked " + adapter.getItem(position), Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "You selected " + adapter.getItem(position), Toast.LENGTH_SHORT).show();
         selected = adapter.getItem(position);
     }
 }
