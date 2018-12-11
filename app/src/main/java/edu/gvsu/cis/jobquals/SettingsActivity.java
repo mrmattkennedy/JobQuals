@@ -159,6 +159,8 @@ public class SettingsActivity extends AppCompatActivity  {
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) { ; }
         });
+
+        /* Data for spinner */
         List jobTypes = new ArrayList<String>();
         jobTypes.add(JOB_LABEL + "All");
         jobTypes.add(JOB_LABEL + "Full time");
@@ -192,6 +194,7 @@ public class SettingsActivity extends AppCompatActivity  {
         doneBtn.setOnClickListener(v -> finishSettings());
     }
 
+    /* Activity is done - get data and return. */
     private void finishSettings() {
         String required = requiredTags.getText().toString();
         String avoid = avoidTags.getText().toString();

@@ -106,15 +106,7 @@ public class QualificationsActivity extends AppCompatActivity {
 
         @Override
         protected String doInBackground(String... params) {
-
-            try {
-                data = getQualifications(params[0]);
-
-                return null;
-//                return data;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            data = getQualifications(params[0]);
             return null;
         }
 
@@ -132,42 +124,50 @@ public class QualificationsActivity extends AppCompatActivity {
                     }
                 }
 
+                //StringBuilder to display data in activity.
                 StringBuilder qualifications = new StringBuilder();
-                for (int i = 0; i < linkBuilder.size(); i++) {
+                for (int i = linkBuilder.size() - 1; i >= 0; i--) {
+                    //Filter data if there are tags applied.
                     if ((requiredTags != null && requiredTags.length != 0) || (avoidTags != null && avoidTags.length != 0)) {
                         document = Jsoup.connect(linkBuilder.get(i)).get();
                         String body = document.body().text();
                         String title = document.title();
+                        boolean addJob = true;
 
                         if (requiredTags != null)
                             for (String requiredTag : requiredTags) {
                                 if (!body.toLowerCase().contains(requiredTag.toLowerCase()) && bodyCheckReq)
-                                    continue;
+                                    addJob = false;
                                 if (!title.toLowerCase().contains(requiredTag.toLowerCase()) && titleCheckReq)
-                                    continue;
+                                    addJob = false;
                             }
 
 
                         if (avoidTags != null)
                             for (String avoidTag : avoidTags) {
-                                if (!body.toLowerCase().contains(avoidTag.toLowerCase()) && bodyCheckIll)
-                                    continue;
-                                if (!title.toLowerCase().contains(avoidTag.toLowerCase()) && titleCheckIll)
-                                    continue;
+                                if (body.toLowerCase().contains(avoidTag.toLowerCase()) && bodyCheckIll)
+                                    addJob = false;
+                                if (title.toLowerCase().contains(avoidTag.toLowerCase()) && titleCheckIll)
+                                    addJob = false;
                             }
+
+                        if (!addJob)
+                            continue;
                     }
+
+                    //Connect to a link, get the requirements / qualifications is posted, then continue.
                     try {
                         document = Jsoup.connect(linkBuilder.get(i)).get();
                         String req = document.select("P:contains(require)").next().toString();
                         String quals = document.select("P:contains(qualification)").next().toString();
 
                         if (!req.isEmpty() && req.contains("<ul>"))
-                            qualifications.append("<b>From " + document.title() + ":</b> " + req + "<br>");
+                            qualifications.append("<b>Requirements from " + document.title() + ":</b> " + req + "<br>");
 
                         if (!quals.isEmpty() && quals.contains("<ul>"))
-                            qualifications.append("<b>From " + document.title() + ":</b> " + quals + "<br>");
+                            qualifications.append("<b>Qualifications from " + document.title() + ":</b> " + quals + "<br>");
 
-                    } catch (Exception e1) { ; }
+                    } catch (Exception e1) { continue; }
                 }
                 return qualifications.toString();
             } catch (IOException e) {

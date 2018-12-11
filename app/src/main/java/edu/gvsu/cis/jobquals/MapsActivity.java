@@ -1,21 +1,15 @@
 package edu.gvsu.cis.jobquals;
 
-import android.app.ActionBar;
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Color;
-import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.os.AsyncTask;
 import android.support.v4.app.FragmentActivity;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.Toast;
@@ -30,17 +24,12 @@ import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.PolygonOptions;
 
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -110,11 +99,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             it.remove(); // avoids a ConcurrentModificationException
         }
 
-
+        //URL to use for addresses.
         String locUrl = "https://nominatim.openstreetmap.org/search.php?q=" + loc + "&polygon_geojson=1&viewbox=";
         requiredBool = intent.getBooleanExtra("Required", false);
         Bundle b = intent.getExtras();
 
+        //Get extras from intent bundle.
         for (String key : b.keySet()) {
             if (key.equals("RequiredTags")) {
                 requiredTags = b.getStringArray("RequiredTags");
@@ -167,11 +157,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         if (!data.equals(FAIL_CODE)) {
             try {
+                //Load JSON file of coordinates for map.
                 JSONObject obj = new JSONObject(data);
                 JSONArray arr = obj.getJSONArray("geometries").getJSONObject(0).getJSONArray("coordinates").getJSONArray(0).getJSONArray(0);
                 PolygonOptions polyopts = new PolygonOptions();
                 String temp;
                 double lat, lng;
+                //Get lat and lng for each coord, add to polyopts for map.
                 for (int i = 0; i < arr.length(); i++) {
                     temp = arr.getString(i);
                     lng = Float.parseFloat(temp.substring(1, temp.indexOf(",")));
@@ -179,6 +171,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     polyopts.add(new LatLng(lat, lng));
                 }
 
+                //Get center point for map.
                 LatLng centerLatLng = null;
                 LatLngBounds.Builder builder = new LatLngBounds.Builder();
                 List<LatLng> tempList = polyopts.getPoints();
@@ -189,6 +182,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 centerLatLng = bounds.getCenter();
 
                 LatLng tempLoc = null;
+                //Make new marker for each address.
                 for (int i = 0; i < addresses.size(); i++)
                     try {
                         tempLoc = getLocationFromAddress(this, addresses.get(i));
@@ -242,6 +236,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         recyclerView.addItemDecoration(dividerItemDecoration);
     }
 
+    //For job posting RecyclerView
     @Override
     public void onItemClick(View view, int position) {
         Intent i = new Intent(MapsActivity.this, SingleJobActivity.class);
@@ -249,22 +244,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startActivity(i);
     }
 
+    //AsyncTask to get data for RecyclerView and for Map.
     public class Async extends AsyncTask<String, Integer, Object> {
 
         @Override
         protected String doInBackground(String... params) {
+            //If data failed to load for RecyclerView, don't try map - always same result.
+            readSuccess = readUrl(params[0]);
+            if (readSuccess == false)
+                data = FAIL_CODE;
 
-            try {
-                readSuccess = readUrl(params[0]);
-                if (readSuccess == false)
-                    data = FAIL_CODE;
-                getCoords(params[1]);
-
-                return null;
-//                return data;
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
+            //Continue if no fail.
+            getCoords(params[1]);
             return null;
         }
 
@@ -300,9 +291,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     }
                 }
 
+                //First, check if job matches tags sent in.
                 int count = 0;
                 for (int i = 0; i < jobs.size(); i++) {
                     doc = Jsoup.connect(jobs.get(i)).get();
+                    //If either required tags has data, or avoid tags has data, proceed.
                     if ((requiredTags != null && requiredTags.length != 0) || (avoidTags != null && avoidTags.length != 0)) {
                         String body = doc.body().text();
 
@@ -323,39 +316,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                     continue;
                             }
                     }
-                    if (count > addressCount)
+
+                    //if # addresses requested already met, skip this part.
+                    if (count == addressCount)
                         continue;
 
                     String company;
                     try {
+                        //Tag to filter to get company - most common case in job postings.
                         elements = doc.getElementsByClass("icl-u-lg-mr--sm icl-u-xs-mr--xs");
                         company = elements.text().substring(0, elements.text().length() - 1).trim();
                         companies.add(company);
                     } catch (Exception e) {
+                        //Fail = continue in loop.
                         continue;
                     }
 
                     try {
+                        //Remove whitespace, replace with +. Also deal with commas.
                         String companyQuery = company.replaceAll("\\s", "+");
                         companyQuery = companyQuery.replaceAll(",", "%2C").substring(0, companyQuery.length() - 1);
                         doc = Jsoup.connect("https://www.google.com/search?q=" + companyQuery + "+address").get();
 
+                        //Most common case for getting the address from Google.
                         elements = doc.getElementsByClass("Z0LcW");
                         String address = elements.text();
                         if (address.isEmpty()) {
+                            //Failed to get address - remove this company, continue loop.
                             companies.remove(companies.size() - 1);
                             continue;
                         }
+                        //Address found successfully - add to list, increment count.
                         addresses.add(address);
                         count++;
 
                     } catch (Exception e1) {
+                        //Failed at some point. Remove company at top, continue loop.
                         companies.remove(companies.size() - 1);
                     }
 
 			    }
 
-			    for (int i = 0; i < titles.size(); i++) {
+			    //For some reason, tag not always caught in titles. Second loop necessary.
+			    for (int i = titles.size() - 1; i >= 0; i--) {
                     if (avoidTags != null) {
                         for (String avoidTag : avoidTags) {
                             if (titles.get(i).toLowerCase().contains(avoidTag.toLowerCase()) && titleCheckIll) {
@@ -364,16 +367,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             }
                         }
                     }
+                    if (requiredTags != null) {
+                        for (String requiredTag : requiredTags) {
+                            if (!titles.get(i).toLowerCase().contains(requiredTag.toLowerCase()) && titleCheckReq) {
+                                jobs.remove(i);
+                                titles.remove(i);
+                            }
+                        }
+                    }
                 }
+                //Read successful
                 return true;
             } catch (Exception e) {
+                //Somehow, error thrown. Data failed to load.
                 return false;
             }
         }
 
+        //Get coords for outline of location specified by user on map.
         private void getCoords(String url) {
             Document doc;
             try {
+                //Open origin URL.
                 doc = Jsoup.connect(url).get();
                 Elements elements = doc.select("a[href]");
                 ArrayList<String> links = new ArrayList<String>();
@@ -381,10 +396,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 String detailsIdentifier = "details.php?place_id=";
                 String osmIdentifier = "&osmid";
 
+                //Get all links in original URL that contain the identifier for the details page.
                 for (Element link : elements)
                     if (link.attr("abs:href").contains(detailsIdentifier))
                         links.add(link.attr("abs:href"));
 
+                //Loop through all links that are details, get osm identifier.
                 for (String place : links) {
                     doc = Jsoup.connect(place).get();
                     elements = doc.select("a[href]");
@@ -393,6 +410,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                             place_ids.add(link.attr("abs:href"));
                 }
 
+                //Loops through all OSM ID links, and get only the OSM ID.
                 for (int i = 0; i < place_ids.size(); i++) {
                     String temp = place_ids.get(i);
                     temp = temp.substring(temp.indexOf(osmIdentifier) + osmIdentifier.length() + 1,
@@ -400,6 +418,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     place_ids.set(i, temp);
                 }
 
+                //Get the link JSON.
                 for (int i = 0; i < links.size(); i++) {
                     links.set(i, "http://polygons.openstreetmap.fr/get_geojson.py?id=" + place_ids.get(i) + "&params=0");
                 }
@@ -407,6 +426,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 doc = Jsoup.connect(links.get(0)).get();
                 data = doc.body().text();
             } catch (Exception e) {
+                //Failed to read, set data to fail code.
                 data = FAIL_CODE;
                 return;
             }

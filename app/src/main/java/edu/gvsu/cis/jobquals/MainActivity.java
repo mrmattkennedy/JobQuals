@@ -75,6 +75,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         mDatabase = FirebaseDatabase.getInstance().getReference("users");
 
+        //Link UI to code
         jobInput = findViewById(R.id.jobInput);
         locationInput = findViewById(R.id.jobInput2);
         searchBtn = findViewById(R.id.searchbtn);
@@ -84,11 +85,13 @@ public class MainActivity extends AppCompatActivity {
         leftLabel = findViewById(R.id.leftLabel);
         rightLabel = findViewById(R.id.rightLabel);
 
+        //Set up listeners
         searchBtn.setOnClickListener(v -> jobSearch());
         qualsBtn.setOnClickListener(v -> displayQualifications());
         clearBtn.setOnClickListener(v -> clearFields());
         colorSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> changeColor());
 
+        //Set colors
         primaryColor = getResources().getColor(R.color.minimal_dusty);
         secondaryColor = getResources().getColor(R.color.minimal_lavender);
         backgroundColor = getResources().getColor(R.color.minimal_overcast);
@@ -174,6 +177,7 @@ public class MainActivity extends AppCompatActivity {
         return true;
     }
 
+    /* Gets tracker for Google Analytics */
     public Tracker getTracker() {
         return GoogleAnalytics.getInstance(this).newTracker(R.xml.global_tracker);
     }
@@ -185,6 +189,7 @@ public class MainActivity extends AppCompatActivity {
         prefs.edit().remove("loc").commit();
     }
 
+    /* Calls MapsActivity. Gets data from fields, checks if settings activity returned anything, then goes. */
     private void jobSearch() {
         String lastSearch = jobInput.getText().toString();
         String lastLocation = locationInput.getText().toString().replaceAll(",", "%2C");
@@ -277,6 +282,7 @@ public class MainActivity extends AppCompatActivity {
         getSupportActionBar().setBackgroundDrawable(new ColorDrawable(secondaryColor));
     }
 
+    /* Calls QualificationsActivity. Gets data from fields, checks if settings activity returned anything, then goes. */
     private void displayQualifications() {
         String lastSearch = jobInput.getText().toString();
         String lastLocation = locationInput.getText().toString().replaceAll(",", "%2C");
@@ -331,6 +337,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    /* Activity results */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == SEARCHES_REQUEST_CODE) {
