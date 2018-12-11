@@ -34,6 +34,9 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.squareup.picasso.Picasso;
+/*
+ * Main activity, this is where activity starts.
+ */
 public class MainActivity extends AppCompatActivity {
 
     private String userId;

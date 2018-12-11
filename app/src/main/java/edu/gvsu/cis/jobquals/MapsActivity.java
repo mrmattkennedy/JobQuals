@@ -38,6 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+/*
+ * Maps activity. Gets job postings from Indeed, and addresses for map, as well as data for outline on map.
+ */
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, SearchRecyclerAdapter.ItemClickListener {
 
     private GoogleMap mMap;

@@ -21,6 +21,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+ * Activity to display qualifications. Uses Async activity to get data.
+ */
 public class QualificationsActivity extends AppCompatActivity {
 
     private Button doneBtn;

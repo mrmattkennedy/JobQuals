@@ -26,6 +26,9 @@ import com.google.android.gms.analytics.Tracker;
 import java.util.ArrayList;
 import java.util.List;
 
+/*
+ * Settings activity. Applies tags to URL to get data in MapsActivity.
+ */
 public class SettingsActivity extends AppCompatActivity  {
 
     private EditText requiredTags;
